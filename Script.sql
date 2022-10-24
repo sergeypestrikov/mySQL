@@ -1,0 +1,5 @@
+DROP TABLE me;
+CREATE TABLE IF NOT EXISTS user (
+	id SERIAL;
+	name VARCHAR(255)
+);

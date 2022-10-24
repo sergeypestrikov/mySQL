@@ -1,0 +1,106 @@
+DROP DATABASE IF EXISTS eshop;
+CREATE DATABASE eshop;
+USE eshop;
+
+DROP TABLE IF EXISTS storages;
+CREATE TABLE storages(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(100)
+) COMMENT = 'Склады';
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products(
+	id SERIAL PRIMARY KEY,
+	description VARCHAR(250) COMMENT 'Описание товара',
+	quantity BIGINT UNSIGNED COMMENT 'Количество',
+	code VARCHAR(100) COMMENT 'Артикул',
+	new_collection CHAR(1),
+	storage_id BIGINT UNSIGNED,
+	FOREIGN KEY (storage_id) REFERENCES storages(id) ON UPDATE CASCADE ON DELETE CASCADE
+) COMMENT = 'Товары';
+
+DROP TABLE IF EXISTS media;
+CREATE TABLE media(
+	id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    product_id BIGINT UNSIGNED NOT NULL,
+  	body text,
+    filename VARCHAR(255),
+    `size` INT,
+	metadata JSON,
+    created_at DATETIME DEFAULT NOW(),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+) COMMENT = 'Медиа';
+
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users(
+	id SERIAL PRIMARY KEY,
+    firstname VARCHAR(100),
+    lastname VARCHAR(100) COMMENT 'Фамилия',
+    email VARCHAR(100) UNIQUE,
+    password_hash varchar(100),
+    phone BIGINT,
+    gender CHAR(1),
+    birthday DATE,
+    hometown VARCHAR(100),
+    is_deleted bit default 0
+) COMMENT = 'Покупатели';
+
+
+DROP TABLE IF EXISTS discounts;
+CREATE TABLE discounts(
+	id SERIAL PRIMARY KEY,
+	user_id BIGINT UNSIGNED,
+	product_id BIGINT UNSIGNED,
+	discount FLOAT UNSIGNED COMMENT 'Скидка от 0.0 до 1.0',
+	started_at DATETIME,
+	finished_at DATETIME,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+) COMMENT = 'Скидки';
+
+
+DROP TABLE IF EXISTS orders;
+CREATE TABLE orders(
+	id SERIAL PRIMARY KEY,
+	user_id BIGINT UNSIGNED NOT NULL,
+	delivery VARCHAR (50),
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE
+	) COMMENT = 'Заказы';
+
+DROP TABLE IF EXISTS orders_products;
+CREATE TABLE orders_products(
+	order_id BIGINT UNSIGNED NOT NULL,
+	product_id BIGINT UNSIGNED NOT NULL,
+	count_product INT,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (order_id, product_id),
+	FOREIGN KEY (order_id) REFERENCES orders(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+	) COMMENT = 'Товары в заказах';
+   
+DROP TABLE IF EXISTS shop_card;
+CREATE TABLE shop_card(
+	id SERIAL PRIMARY KEY,
+	delivery VARCHAR (50),
+	FOREIGN KEY (id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE
+) COMMENT = 'Корзина покупок';
+
+DROP TABLE IF EXISTS shop_card_products;
+CREATE TABLE shop_card_products(
+	shop_card_id BIGINT UNSIGNED NOT NULL,
+	product_id BIGINT UNSIGNED NOT NULL,
+	count_product INT,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (shop_card_id, product_id),
+	FOREIGN KEY (shop_card_id) REFERENCES shop_card(id) ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE
+	) COMMENT = 'Товары в корзине';
